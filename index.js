@@ -1,5 +1,7 @@
 const express = require("express");
 const app = express();
+const fs = require("fs");
+
 app.listen(3000, () => console.log("Server ON 3000"));
 const expressFileUpload = require("express-fileupload");
 //middleware con los parametros de uso
@@ -46,13 +48,22 @@ app.post("/imagen", (req, res) => {
     });
 });
 // ruta de eliminar
-app.get('/delete/:nombre', (req,res) =>{
-  const nombre = req.params.nombre;
-  console.log("nombre:",nombre);
-  console.log(req.params['nombre']);
-  fs.unlink(`${__dirname}/public/imgs/${nombre}`, (err) => {
-    if (err) res.status(500).send("la imagen seleccionada no existe: " + err.code)
-      res.redirect("/collage");
+app.get('/deleteImg/:nombre', (req, res) => {
+  const { nombre } = req.params;
+  const filePath = `${__dirname}/public/imgs/${nombre}`;
+
+  fs.unlink(filePath, (err) => {
+    if (err) {
+      if (err.code === 'ENOENT') {
+        console.error(`imagen no encontrada: ${filePath}`);
+        return res.status(404).send("La imagen seleccionada no existe.");
+      } else {
+        console.error(`Error al eliminar: ${err.message}`);
+        return res.status(500).send("Error al intentar eliminar la imagen: " + err.message);
+      }
+    }
+    console.log(`eliminado: ${filePath}`);
+    res.redirect("/collage");
   });
 });
 
